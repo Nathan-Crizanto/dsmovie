@@ -1,8 +1,9 @@
 import { Movie } from 'assets/types/movie';
 import { BASE_URL } from 'assets/utils/requests';
-import axios from 'axios';
+import { validateEmail } from 'assets/utils/validate';
+import axios, { AxiosRequestConfig } from 'axios';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './styles.css'
 
 
@@ -10,10 +11,43 @@ type Props = {
     movieId: string;
 }
 
+
+
+
 function FormCard({ movieId }: Props) {
 
-    const [movie, setMovie] = useState<Movie>();
+    const navigate = useNavigate();
 
+    const [movie, setMovie] = useState<Movie>();
+    const hadleSumit = (event:React.FormEvent<HTMLFormElement>) =>{
+
+        event.preventDefault();
+
+        const email = (event.target as any).email.value;
+        const score = (event.target as any).score.value; 
+
+        if(!validateEmail(email)){
+            return;
+        }
+        
+        const config: AxiosRequestConfig = {
+            baseURL: BASE_URL,
+            method: 'PUT',
+            url: '/scores',
+            data: {
+                email: email,
+                movieId: movieId,
+                score: score
+            }
+        }
+
+        axios(config).then(
+            response =>{
+                navigate("/")
+            }
+        )
+
+    }
     useEffect(() => {
         axios.get(`${BASE_URL}/movies/${movieId}`)
             .then(response => {
@@ -28,7 +62,7 @@ function FormCard({ movieId }: Props) {
             <img className="dsmovie-movie-card-image" src={movie?.image} alt={movie?.title} />
             <div className="dsmovie-card-bottom-container">
                 <h3>{movie?.title}</h3>
-                <form className="dsmovie-form">
+                <form className="dsmovie-form " onSubmit={hadleSumit}>
                     <div className="form-group dsmovie-form-group">
                         <label htmlFor="email">Informe seu email</label>
                         <input type="email" className="form-control" id="email" />
